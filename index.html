@@ -5,16 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AM335x SYSBOOT Decoder</title>
   <style>
+    :root {
+      --bg: #f5f5f5;
+      --text: #333;
+      --heading: #c00000;
+      --input-bg: #fff;
+      --input-border: #aaa;
+      --output-bg: #fff;
+      --output-border: #ccc;
+      --section-header-color: #555;
+      --section-header-border: #ddd;
+      --muted: #555;
+      --example-color: #777;
+      --error-color: #c00000;
+      --warning-color: #c07000;
+      --ok-color: #007000;
+      --btn-bg: #c00000;
+      --btn-hover-bg: #900000;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1e1e1e;
+        --text: #d4d4d4;
+        --heading: #e05555;
+        --input-bg: #2d2d2d;
+        --input-border: #555;
+        --output-bg: #2d2d2d;
+        --output-border: #444;
+        --section-header-color: #aaa;
+        --section-header-border: #444;
+        --muted: #aaa;
+        --example-color: #888;
+        --error-color: #e05555;
+        --warning-color: #d4930a;
+        --ok-color: #4caf50;
+        --btn-bg: #c00000;
+        --btn-hover-bg: #900000;
+      }
+    }
     body {
       font-family: Arial, sans-serif;
       max-width: 800px;
       margin: 40px auto;
       padding: 0 20px;
-      background-color: #f5f5f5;
-      color: #333;
+      background-color: var(--bg);
+      color: var(--text);
     }
     h1 {
-      color: #c00000;
+      color: var(--heading);
     }
     .form-group {
       margin-bottom: 16px;
@@ -28,26 +66,28 @@
       width: 240px;
       padding: 8px 12px;
       font-size: 16px;
-      border: 1px solid #aaa;
+      border: 1px solid var(--input-border);
       border-radius: 4px;
       font-family: monospace;
+      background-color: var(--input-bg);
+      color: var(--text);
     }
     button {
       padding: 8px 20px;
       font-size: 16px;
-      background-color: #c00000;
+      background-color: var(--btn-bg);
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
     button:hover {
-      background-color: #900000;
+      background-color: var(--btn-hover-bg);
     }
     #output {
       margin-top: 24px;
-      background: #fff;
-      border: 1px solid #ccc;
+      background: var(--output-bg);
+      border: 1px solid var(--output-border);
       border-radius: 4px;
       padding: 16px 20px;
       white-space: pre-wrap;
@@ -60,30 +100,30 @@
       display: block;
     }
     .error {
-      color: #c00000;
+      color: var(--error-color);
       font-weight: bold;
     }
     .section-header {
       font-weight: bold;
-      color: #555;
-      border-bottom: 1px solid #ddd;
+      color: var(--section-header-color);
+      border-bottom: 1px solid var(--section-header-border);
       padding-bottom: 4px;
       margin-top: 12px;
       margin-bottom: 8px;
     }
     .warning {
-      color: #c07000;
+      color: var(--warning-color);
     }
     .ok {
-      color: #007000;
+      color: var(--ok-color);
     }
     p.description {
-      color: #555;
+      color: var(--muted);
       margin-bottom: 20px;
     }
     .example {
       font-size: 13px;
-      color: #777;
+      color: var(--example-color);
       margin-top: 4px;
     }
   </style>
