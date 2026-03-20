@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AM335x SYSBOOT Decoder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    h1 {
+      color: #c00000;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    input[type="text"] {
+      width: 240px;
+      padding: 8px 12px;
+      font-size: 16px;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    button {
+      padding: 8px 20px;
+      font-size: 16px;
+      background-color: #c00000;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #900000;
+    }
+    #output {
+      margin-top: 24px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 16px 20px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 14px;
+      min-height: 60px;
+      display: none;
+    }
+    #output.visible {
+      display: block;
+    }
+    .error {
+      color: #c00000;
+      font-weight: bold;
+    }
+    .section-header {
+      font-weight: bold;
+      color: #555;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+      margin-top: 12px;
+      margin-bottom: 8px;
+    }
+    .warning {
+      color: #c07000;
+    }
+    .ok {
+      color: #007000;
+    }
+    p.description {
+      color: #555;
+      margin-bottom: 20px;
+    }
+    .example {
+      font-size: 13px;
+      color: #777;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>AM335x SYSBOOT Decoder</h1>
+  <p class="description">
+    Enter the value of the AM335x <code>CONTROL_STATUS</code> register (address <code>0x44E10040</code>)
+    to decode the SYSBOOT configuration.
+  </p>
+
+  <div class="form-group">
+    <label for="regval">CONTROL_STATUS Register Value (hex or decimal):</label>
+    <input type="text" id="regval" placeholder="e.g. 0x20000F00" autocomplete="off" spellcheck="false">
+    <div class="example">Examples: <code>0x20000F00</code> &nbsp;|&nbsp; <code>536874752</code></div>
+  </div>
+  <button onclick="decode()">Decode</button>
+
+  <div id="output"></div>
+
+  <script>
+    function decode() {
+      var input = document.getElementById('regval').value.trim();
+      var output = document.getElementById('output');
+      output.innerHTML = '';
+      output.className = 'visible';
+
+      if (!input) {
+        output.innerHTML = '<span class="error">Please enter a register value.</span>';
+        return;
+      }
+
+      var reg_val;
+      try {
+        reg_val = parseInt(input, input.toLowerCase().startsWith('0x') ? 16 : 10);
+      } catch (e) {
+        reg_val = NaN;
+      }
+
+      if (isNaN(reg_val)) {
+        output.innerHTML = '<span class="error">Invalid value. Please enter a valid hex (0x...) or decimal number.</span>';
+        return;
+      }
+
+      var lines = [];
+
+      lines.push('<span class="section-header">CONTROL_STATUS = 0x' + reg_val.toString(16).toUpperCase().padStart(8, '0') + '</span>');
+
+      // SYSBOOT[15:14] - Crystal frequency (bits [23:22])
+      lines.push('<span class="section-header">Crystal Frequency (SYSBOOT[15:14])</span>');
+      var freq = (reg_val >>> 22) & 0x3;
+      if (freq === 0) { lines.push('  * SYSBOOT[15:14] = 00b (19.2 MHz)'); }
+      if (freq === 1) { lines.push('  * SYSBOOT[15:14] = 01b (24 MHz)'); }
+      if (freq === 2) { lines.push('  * SYSBOOT[15:14] = 10b (25 MHz)'); }
+      if (freq === 3) { lines.push('  * SYSBOOT[15:14] = 11b (26 MHz)'); }
+
+      // SYSBOOT[13:12] - Must be 0 (bits [21:20])
+      lines.push('<span class="section-header">SYSBOOT[13:12] (bits [21:20])</span>');
+      if ((reg_val & (3 << 20)) !== 0) {
+        lines.push('  <span class="warning">* SYSBOOT[13:12] have been set improperly!</span>');
+      } else {
+        lines.push('  * SYSBOOT[13:12] = 00b (correct)');
+      }
+
+      // SYSBOOT[11:10] - GPMC CS0 addr/data muxing (bits [19:18])
+      lines.push('<span class="section-header">GPMC CS0 Address/Data Muxing (SYSBOOT[11:10])</span>');
+      var mux = (reg_val >>> 18) & 0x3;
+      if (mux === 0) { lines.push('  * SYSBOOT[11:10] = 00b - No GPMC CS0 addr/data muxing'); }
+      if (mux === 1) { lines.push('  * SYSBOOT[11:10] = 01b - GPMC CS0 addr/addr/data muxing'); }
+      if (mux === 2) { lines.push('  * SYSBOOT[11:10] = 10b - GPMC CS0 addr/data muxing'); }
+      if (mux === 3) { lines.push('  <span class="warning">* SYSBOOT[11:10] = 11b - ILLEGAL VALUE!</span>'); }
+
+      // SYSBOOT[9] - GPMC CS0 WAIT input (bit [17])
+      lines.push('<span class="section-header">GPMC CS0 WAIT Input (SYSBOOT[9])</span>');
+      if ((reg_val & (1 << 17)) === 0) {
+        lines.push('  * SYSBOOT[9] = 0 - GPMC CS0 Ignore WAIT input');
+      } else {
+        lines.push('  * SYSBOOT[9] = 1 - GPMC CS0 Use WAIT input');
+      }
+
+      // SYSBOOT[8] - GPMC CS0 data bus width (bit [16])
+      lines.push('<span class="section-header">GPMC CS0 Data Bus Width (SYSBOOT[8])</span>');
+      if ((reg_val & (1 << 16)) === 0) {
+        lines.push('  * SYSBOOT[8] = 0 - GPMC CS0 8-bit data bus');
+      } else {
+        lines.push('  * SYSBOOT[8] = 1 - GPMC CS0 16-bit data bus');
+      }
+
+      // Device Type (bits [10:8])
+      lines.push('<span class="section-header">Device Type (bits [10:8])</span>');
+      if ((reg_val & (7 << 8)) === (3 << 8)) {
+        lines.push('  * Device Type = General Purpose (GP)');
+      } else {
+        lines.push('  <span class="warning">* Device Type is NOT GP</span>');
+      }
+
+      // SYSBOOT[7:6] - EMAC mode (bits [7:6])
+      lines.push('<span class="section-header">EMAC Interface (SYSBOOT[7:6])</span>');
+      var emac = (reg_val >>> 6) & 0x3;
+      if (emac === 0) { lines.push('  * SYSBOOT[7:6] = 00b - MII (EMAC boot modes only)'); }
+      if (emac === 1) { lines.push('  * SYSBOOT[7:6] = 01b - RMII (EMAC boot modes only)'); }
+      if (emac === 2) { lines.push('  <span class="warning">* SYSBOOT[7:6] = 10b - ILLEGAL VALUE!</span>'); }
+      if (emac === 3) { lines.push('  * SYSBOOT[7:6] = 11b - RGMII no internal delay (EMAC boot modes only)'); }
+
+      // SYSBOOT[5] - CLKOUT1 (bit [5])
+      lines.push('<span class="section-header">CLKOUT1 (SYSBOOT[5])</span>');
+      if ((reg_val & (1 << 5)) === 0) {
+        lines.push('  * SYSBOOT[5] = 0 - CLKOUT1 disabled');
+      } else {
+        lines.push('  * SYSBOOT[5] = 1 - CLKOUT1 enabled');
+      }
+
+      // Boot Sequence (SYSBOOT[4:0], bits [4:0])
+      lines.push('<span class="section-header">Boot Sequence (SYSBOOT[4:0])</span>');
+      var boot_sequence = reg_val & 0x1F;
+      switch (boot_sequence) {
+        case 0x00: lines.push('  <span class="warning">* RESERVED BOOT SEQUENCE!</span>'); break;
+        case 0x01: lines.push('  * Boot Sequence : UART0 -&gt; XIP w/WAIT (MUX2) -&gt; MMC0 -&gt; SPI0'); break;
+        case 0x02: lines.push('  * Boot Sequence : UART0 -&gt; SPI0 -&gt; NAND -&gt; NANDI2C'); break;
+        case 0x03: lines.push('  * Boot Sequence : UART0 -&gt; SPI0 -&gt; XIP (MUX2) -&gt; MMC0'); break;
+        case 0x04: lines.push('  * Boot Sequence : UART0 -&gt; XIP w/WAIT (MUX1) -&gt; MMC0 -&gt; NAND'); break;
+        case 0x05: lines.push('  * Boot Sequence : UART0 -&gt; XIP (MUX1) -&gt; SPI0 -&gt; NANDI2C'); break;
+        case 0x06: lines.push('  * Boot Sequence : EMAC1 -&gt; SPI0 -&gt; NAND -&gt; NANDI2C'); break;
+        case 0x07: lines.push('  * Boot Sequence : EMAC1 -&gt; MMC0 -&gt; XIP w/WAIT (MUX2) -&gt; NAND'); break;
+        case 0x08: lines.push('  * Boot Sequence : EMAC1 -&gt; MMC0 -&gt; XIP (MUX2) -&gt; NANDI2C'); break;
+        case 0x09: lines.push('  * Boot Sequence : EMAC1 -&gt; XIP w/WAIT (MUX1) -&gt; NAND -&gt; MMC0'); break;
+        case 0x0A: lines.push('  * Boot Sequence : EMAC1 -&gt; XIP (MUX1) -&gt; SPI0 -&gt; NANDI2C'); break;
+        case 0x0B: lines.push('  * Boot Sequence : USB0 -&gt; NAND -&gt; SPI0 -&gt; MMC0'); break;
+        case 0x0C: lines.push('  * Boot Sequence : USB0 -&gt; NAND -&gt; XIP (MUX2) -&gt; NANDI2C'); break;
+        case 0x0D: lines.push('  * Boot Sequence : USB0 -&gt; NAND -&gt; XIP (MUX1) -&gt; SPI0'); break;
+        case 0x0E: lines.push('  <span class="warning">* RESERVED BOOT SEQUENCE!</span>'); break;
+        case 0x0F: lines.push('  * Boot Sequence : UART0 -&gt; EMAC1 -&gt; Reserved -&gt; Reserved'); break;
+        case 0x10: lines.push('  * Boot Sequence : XIP (MUX1) -&gt; UART0 -&gt; EMAC1 -&gt; MMC0'); break;
+        case 0x11: lines.push('  * Boot Sequence : XIP w/WAIT (MUX1) -&gt; UART0 -&gt; EMAC1 -&gt; MMC0'); break;
+        case 0x12: lines.push('  * Boot Sequence : NAND -&gt; NANDI2C -&gt; USB0 -&gt; UART0'); break;
+        case 0x13: lines.push('  * Boot Sequence : NAND -&gt; NANDI2C -&gt; MMC0 -&gt; UART0'); break;
+        case 0x14: lines.push('  * Boot Sequence : NAND -&gt; NANDI2C -&gt; SPI0 -&gt; EMAC1'); break;
+        case 0x15: lines.push('  * Boot Sequence : NANDI2C -&gt; MMC0 -&gt; EMAC1 -&gt; UART0'); break;
+        case 0x16: lines.push('  * Boot Sequence : SPI0 -&gt; MMC0 -&gt; UART0 -&gt; EMAC1'); break;
+        case 0x17: lines.push('  * Boot Sequence : MMC0 -&gt; SPI0 -&gt; UART0 -&gt; USB0'); break;
+        case 0x18: lines.push('  * Boot Sequence : SPI0 -&gt; MMC0 -&gt; USB0 -&gt; UART0'); break;
+        case 0x19: lines.push('  * Boot Sequence : SPI0 -&gt; MMC0 -&gt; EMAC1 -&gt; UART0'); break;
+        case 0x1A: lines.push('  * Boot Sequence : XIP (MUX2) -&gt; UART0 -&gt; SPI0 -&gt; MMC0'); break;
+        case 0x1B: lines.push('  * Boot Sequence : XIP w/WAIT (MUX2) -&gt; UART0 -&gt; SPI0 -&gt; MMC0'); break;
+        case 0x1C: lines.push('  * Boot Sequence : MMC1 -&gt; MMC0 -&gt; UART0 -&gt; USB0'); break;
+        case 0x1D: lines.push('  <span class="warning">* RESERVED BOOT SEQUENCE!</span>'); break;
+        case 0x1E: lines.push('  <span class="warning">* RESERVED BOOT SEQUENCE!</span>'); break;
+        case 0x1F: lines.push('  * Boot Sequence : Fast External Boot -&gt; EMAC1 -&gt; UART0 -&gt; Reserved'); break;
+      }
+
+      output.innerHTML = lines.join('\n');
+    }
+
+    // Allow pressing Enter in the input field to trigger decode
+    document.getElementById('regval').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { decode(); }
+    });
+  </script>
+</body>
+</html>
