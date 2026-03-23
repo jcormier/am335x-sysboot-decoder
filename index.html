@@ -22,6 +22,8 @@
       --ok-color: #007000;
       --btn-bg: #c00000;
       --btn-hover-bg: #900000;
+      --link-color: #0000ee;
+      --footer-border: #ccc;
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -41,15 +43,23 @@
         --ok-color: #4caf50;
         --btn-bg: #c00000;
         --btn-hover-bg: #900000;
+        --link-color: #88b4ff;
+        --footer-border: #444;
       }
     }
     body {
       font-family: Arial, sans-serif;
       max-width: 800px;
+      min-height: calc(100vh - 80px);
       margin: 40px auto;
       padding: 0 20px;
       background-color: var(--bg);
       color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+    a {
+      color: var(--link-color);
     }
     h1 {
       color: var(--heading);
@@ -125,6 +135,14 @@
       font-size: 13px;
       color: var(--example-color);
       margin-top: 4px;
+    }
+    #footer {
+      margin-top: auto;
+      padding-top: 16px;
+      padding-bottom: 10px;
+      border-top: 1px solid var(--footer-border);
+      font-size: 13px;
+      color: var(--muted);
     }
   </style>
 </head>
