@@ -172,8 +172,8 @@
       output.className = 'visible';
 
       if (!skipHistory) {
-        var newUrl = window.location.pathname + (input ? '?' + new URLSearchParams({ val: input }) : '');
-        history.pushState({ val: input }, '', newUrl);
+        var newUrl = window.location.pathname + (input ? '?' + new URLSearchParams({ regval: input }) : '');
+        history.pushState({ regval: input }, '', newUrl);
       }
 
       if (!input) {
@@ -309,7 +309,7 @@
 
     // Handle back/forward navigation
     window.addEventListener('popstate', function(e) {
-      var val = e.state?.val ?? '';
+      var val = e.state?.regval ?? '';
       document.getElementById('regval').value = val;
       if (val) {
         decode(true);
@@ -323,10 +323,10 @@
     // Decode from URL query parameter on page load
     (function() {
       var params = new URLSearchParams(window.location.search);
-      var val = params.get('val');
+      var val = params.get('regval');
       if (val) {
         document.getElementById('regval').value = val;
-        history.replaceState({ val: val }, '');
+        history.replaceState({ regval: val }, '');
         decode(true);
       }
     })();
