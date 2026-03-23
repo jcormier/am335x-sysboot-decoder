@@ -1,6 +1,8 @@
 # am335x-sysboot-decoder
 Simple JavaScript decoder for TI AM335x SYSBOOT register.
 
+[AM335x TRM Section 9.3.1.4](https://www.ti.com/lit/ug/spruh73q/spruh73q.pdf)
+
 ## Usage
 
 Open [the decoder page](https://jcormier.github.io/am335x-sysboot-decoder/) and enter the value
