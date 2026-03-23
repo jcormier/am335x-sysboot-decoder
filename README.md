@@ -28,7 +28,7 @@ making it easy to bookmark or share a specific decode result.
 
 You can also navigate back and forward through previous decodes using the browser's history buttons.
 
-To link directly to a pre-decoded value, append `?regval=<value>` to the URL:
+To link directly to a decoded value, append `?regval=<value>` to the URL:
 
 ```
 https://jcormier.github.io/am335x-sysboot-decoder/?regval=0x20000F00
