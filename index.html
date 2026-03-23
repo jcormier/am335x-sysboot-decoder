@@ -165,11 +165,16 @@
   <div id="footer"><a href="https://github.com/jcormier/am335x-sysboot-decoder">Link to github source</a></div>
 
   <script>
-    function decode() {
+    function decode(skipHistory) {
       var input = document.getElementById('regval').value.trim();
       var output = document.getElementById('output');
       output.innerHTML = '';
       output.className = 'visible';
+
+      if (!skipHistory) {
+        var newUrl = window.location.pathname + (input ? '?' + new URLSearchParams({ val: input }) : '');
+        history.pushState({ val: input }, '', newUrl);
+      }
 
       if (!input) {
         output.innerHTML = '<span class="error">Please enter a register value.</span>';
@@ -301,6 +306,30 @@
     document.getElementById('regval').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') { decode(); }
     });
+
+    // Handle back/forward navigation
+    window.addEventListener('popstate', function(e) {
+      var val = e.state?.val ?? '';
+      document.getElementById('regval').value = val;
+      if (val) {
+        decode(true);
+      } else {
+        var output = document.getElementById('output');
+        output.innerHTML = '';
+        output.className = '';
+      }
+    });
+
+    // Decode from URL query parameter on page load
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var val = params.get('val');
+      if (val) {
+        document.getElementById('regval').value = val;
+        history.replaceState({ val: val }, '');
+        decode(true);
+      }
+    })();
   </script>
 </body>
 </html>
