@@ -207,8 +207,9 @@
 
       // SYSBOOT[13:12] - Must be 0 (bits [21:20])
       lines.push('<span class="section-header">SYSBOOT[13:12] (bits [21:20])</span>');
-      if ((reg_val & (3 << 20)) !== 0) {
-        lines.push('  <span class="warning">* SYSBOOT[13:12] have been set improperly!</span>');
+      var sysboot1312 = (reg_val >>> 20) & 0x3;
+      if (sysboot1312 !== 0) {
+        lines.push('  <span class="warning">* SYSBOOT[13:12] = ' + sysboot1312.toString(2).padStart(2, '0') + 'b (incorrect, must be 00b)</span>');
       } else {
         lines.push('  * SYSBOOT[13:12] = 00b (correct)');
       }
