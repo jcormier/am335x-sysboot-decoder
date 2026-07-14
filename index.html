@@ -206,11 +206,12 @@
       if (freq === 3) { lines.push('  * SYSBOOT[15:14] = 11b (26 MHz)'); }
 
       // SYSBOOT[13:12] - Must be 0 (bits [21:20])
-      lines.push('<span class="section-header">SYSBOOT[13:12] (bits [21:20])</span>');
+      var reserved_sysboot = ((reg_val >>> 20) & 0x3).toString(2).padStart(2, '0');
+      lines.push('<span class="section-header">RESERVED SYSBOOT[13:12] (bits [21:20])</span>');
       if ((reg_val & (3 << 20)) !== 0) {
-        lines.push('  <span class="warning">* SYSBOOT[13:12] have been set improperly!</span>');
+        lines.push('  <span class="warning">* RESERVED SYSBOOT[13:12] = ' + reserved_sysboot + 'b - have been set improperly!</span>');
       } else {
-        lines.push('  * SYSBOOT[13:12] = 00b (correct)');
+        lines.push('  * RESERVED SYSBOOT[13:12] = ' + reserved_sysboot + 'b (correct)');
       }
 
       // SYSBOOT[11:10] - GPMC CS0 addr/data muxing (bits [19:18])
@@ -239,10 +240,11 @@
 
       // Device Type (bits [10:8])
       lines.push('<span class="section-header">Device Type (bits [10:8])</span>');
+      var device_type = ((reg_val >>> 8) & 0x7).toString(2).padStart(3, '0');
       if ((reg_val & (7 << 8)) === (3 << 8)) {
-        lines.push('  * Device Type = General Purpose (GP)');
+        lines.push('  * Device Type = ' + device_type + 'b - General Purpose (GP)');
       } else {
-        lines.push('  <span class="warning">* Device Type is NOT GP</span>');
+        lines.push('  <span class="warning">* Device Type = ' + device_type + 'b - NOT GP</span>');
       }
 
       // SYSBOOT[7:6] - EMAC mode (bits [7:6])
@@ -264,39 +266,40 @@
       // Boot Sequence (SYSBOOT[4:0], bits [4:0])
       lines.push('<span class="section-header">Boot Sequence (SYSBOOT[4:0])</span>');
       var boot_sequence = reg_val & 0x1F;
+      var boot_sequence_binary = boot_sequence.toString(2).padStart(5, '0');
       switch (boot_sequence) {
-        case 0x00: lines.push('  <span class="warning">* RESERVED BOOT SEQUENCE!</span>'); break;
-        case 0x01: lines.push('  * Boot Sequence : UART0 -&gt; XIP w/WAIT (MUX2) -&gt; MMC0 -&gt; SPI0'); break;
-        case 0x02: lines.push('  * Boot Sequence : UART0 -&gt; SPI0 -&gt; NAND -&gt; NANDI2C'); break;
-        case 0x03: lines.push('  * Boot Sequence : UART0 -&gt; SPI0 -&gt; XIP (MUX2) -&gt; MMC0'); break;
-        case 0x04: lines.push('  * Boot Sequence : UART0 -&gt; XIP w/WAIT (MUX1) -&gt; MMC0 -&gt; NAND'); break;
-        case 0x05: lines.push('  * Boot Sequence : UART0 -&gt; XIP (MUX1) -&gt; SPI0 -&gt; NANDI2C'); break;
-        case 0x06: lines.push('  * Boot Sequence : EMAC1 -&gt; SPI0 -&gt; NAND -&gt; NANDI2C'); break;
-        case 0x07: lines.push('  * Boot Sequence : EMAC1 -&gt; MMC0 -&gt; XIP w/WAIT (MUX2) -&gt; NAND'); break;
-        case 0x08: lines.push('  * Boot Sequence : EMAC1 -&gt; MMC0 -&gt; XIP (MUX2) -&gt; NANDI2C'); break;
-        case 0x09: lines.push('  * Boot Sequence : EMAC1 -&gt; XIP w/WAIT (MUX1) -&gt; NAND -&gt; MMC0'); break;
-        case 0x0A: lines.push('  * Boot Sequence : EMAC1 -&gt; XIP (MUX1) -&gt; SPI0 -&gt; NANDI2C'); break;
-        case 0x0B: lines.push('  * Boot Sequence : USB0 -&gt; NAND -&gt; SPI0 -&gt; MMC0'); break;
-        case 0x0C: lines.push('  * Boot Sequence : USB0 -&gt; NAND -&gt; XIP (MUX2) -&gt; NANDI2C'); break;
-        case 0x0D: lines.push('  * Boot Sequence : USB0 -&gt; NAND -&gt; XIP (MUX1) -&gt; SPI0'); break;
-        case 0x0E: lines.push('  <span class="warning">* RESERVED BOOT SEQUENCE!</span>'); break;
-        case 0x0F: lines.push('  * Boot Sequence : UART0 -&gt; EMAC1 -&gt; Reserved -&gt; Reserved'); break;
-        case 0x10: lines.push('  * Boot Sequence : XIP (MUX1) -&gt; UART0 -&gt; EMAC1 -&gt; MMC0'); break;
-        case 0x11: lines.push('  * Boot Sequence : XIP w/WAIT (MUX1) -&gt; UART0 -&gt; EMAC1 -&gt; MMC0'); break;
-        case 0x12: lines.push('  * Boot Sequence : NAND -&gt; NANDI2C -&gt; USB0 -&gt; UART0'); break;
-        case 0x13: lines.push('  * Boot Sequence : NAND -&gt; NANDI2C -&gt; MMC0 -&gt; UART0'); break;
-        case 0x14: lines.push('  * Boot Sequence : NAND -&gt; NANDI2C -&gt; SPI0 -&gt; EMAC1'); break;
-        case 0x15: lines.push('  * Boot Sequence : NANDI2C -&gt; MMC0 -&gt; EMAC1 -&gt; UART0'); break;
-        case 0x16: lines.push('  * Boot Sequence : SPI0 -&gt; MMC0 -&gt; UART0 -&gt; EMAC1'); break;
-        case 0x17: lines.push('  * Boot Sequence : MMC0 -&gt; SPI0 -&gt; UART0 -&gt; USB0'); break;
-        case 0x18: lines.push('  * Boot Sequence : SPI0 -&gt; MMC0 -&gt; USB0 -&gt; UART0'); break;
-        case 0x19: lines.push('  * Boot Sequence : SPI0 -&gt; MMC0 -&gt; EMAC1 -&gt; UART0'); break;
-        case 0x1A: lines.push('  * Boot Sequence : XIP (MUX2) -&gt; UART0 -&gt; SPI0 -&gt; MMC0'); break;
-        case 0x1B: lines.push('  * Boot Sequence : XIP w/WAIT (MUX2) -&gt; UART0 -&gt; SPI0 -&gt; MMC0'); break;
-        case 0x1C: lines.push('  * Boot Sequence : MMC1 -&gt; MMC0 -&gt; UART0 -&gt; USB0'); break;
-        case 0x1D: lines.push('  <span class="warning">* RESERVED BOOT SEQUENCE!</span>'); break;
-        case 0x1E: lines.push('  <span class="warning">* RESERVED BOOT SEQUENCE!</span>'); break;
-        case 0x1F: lines.push('  * Boot Sequence : Fast External Boot -&gt; EMAC1 -&gt; UART0 -&gt; Reserved'); break;
+        case 0x00: lines.push('  <span class="warning">* Boot Sequence = ' + boot_sequence_binary + 'b : RESERVED BOOT SEQUENCE!</span>'); break;
+        case 0x01: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : UART0 -&gt; XIP w/WAIT (MUX2) -&gt; MMC0 -&gt; SPI0'); break;
+        case 0x02: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : UART0 -&gt; SPI0 -&gt; NAND -&gt; NANDI2C'); break;
+        case 0x03: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : UART0 -&gt; SPI0 -&gt; XIP (MUX2) -&gt; MMC0'); break;
+        case 0x04: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : UART0 -&gt; XIP w/WAIT (MUX1) -&gt; MMC0 -&gt; NAND'); break;
+        case 0x05: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : UART0 -&gt; XIP (MUX1) -&gt; SPI0 -&gt; NANDI2C'); break;
+        case 0x06: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : EMAC1 -&gt; SPI0 -&gt; NAND -&gt; NANDI2C'); break;
+        case 0x07: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : EMAC1 -&gt; MMC0 -&gt; XIP w/WAIT (MUX2) -&gt; NAND'); break;
+        case 0x08: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : EMAC1 -&gt; MMC0 -&gt; XIP (MUX2) -&gt; NANDI2C'); break;
+        case 0x09: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : EMAC1 -&gt; XIP w/WAIT (MUX1) -&gt; NAND -&gt; MMC0'); break;
+        case 0x0A: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : EMAC1 -&gt; XIP (MUX1) -&gt; SPI0 -&gt; NANDI2C'); break;
+        case 0x0B: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : USB0 -&gt; NAND -&gt; SPI0 -&gt; MMC0'); break;
+        case 0x0C: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : USB0 -&gt; NAND -&gt; XIP (MUX2) -&gt; NANDI2C'); break;
+        case 0x0D: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : USB0 -&gt; NAND -&gt; XIP (MUX1) -&gt; SPI0'); break;
+        case 0x0E: lines.push('  <span class="warning">* Boot Sequence = ' + boot_sequence_binary + 'b : RESERVED BOOT SEQUENCE!</span>'); break;
+        case 0x0F: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : UART0 -&gt; EMAC1 -&gt; Reserved -&gt; Reserved'); break;
+        case 0x10: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : XIP (MUX1) -&gt; UART0 -&gt; EMAC1 -&gt; MMC0'); break;
+        case 0x11: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : XIP w/WAIT (MUX1) -&gt; UART0 -&gt; EMAC1 -&gt; MMC0'); break;
+        case 0x12: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : NAND -&gt; NANDI2C -&gt; USB0 -&gt; UART0'); break;
+        case 0x13: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : NAND -&gt; NANDI2C -&gt; MMC0 -&gt; UART0'); break;
+        case 0x14: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : NAND -&gt; NANDI2C -&gt; SPI0 -&gt; EMAC1'); break;
+        case 0x15: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : NANDI2C -&gt; MMC0 -&gt; EMAC1 -&gt; UART0'); break;
+        case 0x16: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : SPI0 -&gt; MMC0 -&gt; UART0 -&gt; EMAC1'); break;
+        case 0x17: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : MMC0 -&gt; SPI0 -&gt; UART0 -&gt; USB0'); break;
+        case 0x18: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : SPI0 -&gt; MMC0 -&gt; USB0 -&gt; UART0'); break;
+        case 0x19: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : SPI0 -&gt; MMC0 -&gt; EMAC1 -&gt; UART0'); break;
+        case 0x1A: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : XIP (MUX2) -&gt; UART0 -&gt; SPI0 -&gt; MMC0'); break;
+        case 0x1B: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : XIP w/WAIT (MUX2) -&gt; UART0 -&gt; SPI0 -&gt; MMC0'); break;
+        case 0x1C: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : MMC1 -&gt; MMC0 -&gt; UART0 -&gt; USB0'); break;
+        case 0x1D: lines.push('  <span class="warning">* Boot Sequence = ' + boot_sequence_binary + 'b : RESERVED BOOT SEQUENCE!</span>'); break;
+        case 0x1E: lines.push('  <span class="warning">* Boot Sequence = ' + boot_sequence_binary + 'b : RESERVED BOOT SEQUENCE!</span>'); break;
+        case 0x1F: lines.push('  * Boot Sequence = ' + boot_sequence_binary + 'b : Fast External Boot -&gt; EMAC1 -&gt; UART0 -&gt; Reserved'); break;
       }
 
       output.innerHTML = lines.join('\n');
